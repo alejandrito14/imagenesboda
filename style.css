@@ -1,0 +1,46 @@
+body {
+    background-color: #f0f2f5;
+}
+
+.background-image {
+    background-image: url('fondo_boda.jpg'); /* Asegúrate de tener una imagen de fondo con este nombre */
+    background-size: cover;
+    background-position: center;
+}
+
+.card {
+    max-width: 900px;
+}
+
+.left-panel {
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparente para ver el fondo */
+    border-radius: 0.5rem 0 0 0.5rem;
+}
+
+.right-panel {
+    background-color: #fff;
+    border-radius: 0 0.5rem 0.5rem 0;
+}
+
+.file-drop-area {
+    cursor: pointer;
+    border-style: dashed;
+    border-color: #ccc;
+    transition: all 0.3s ease;
+}
+
+.file-drop-area:hover {
+    background-color: #f9f9f9;
+    border-color: #6c757d;
+}
+
+.preview-thumbnail {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    margin-right: 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+}
+
+
