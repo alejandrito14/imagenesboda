@@ -1,12 +1,6 @@
 <?php
-// Configuración de la base de datos
-$servername = "localhost";
-$username = "root"; // Cambia esto
-$password = "root"; // Cambia esto
-$dbname = "baseboda"; // Cambia esto
-
-// Crear conexión
-$conn = new mysqli($servername, $username, $password, $dbname);
+require_once __DIR__ . '/includes/database.php';
+$conn = boda_db();
 
 // Verificar conexión
 if ($conn->connect_error) {
@@ -14,7 +8,7 @@ if ($conn->connect_error) {
 }
 
 // Carpeta donde se guardarán las imágenes
-$target_dir = "uploads/";
+$target_dir = __DIR__ . "/uploads/";
 
 if (!is_dir($target_dir)) {
     mkdir($target_dir, 0777, true);
@@ -45,34 +39,39 @@ $success_count = 0;
 
 foreach ($uploaded_files['name'] as $key => $name) {
     $file_tmp = $uploaded_files['tmp_name'][$key];
-    $file_type = $uploaded_files['type'][$key];
     $file_error = $uploaded_files['error'][$key];
 
     if ($file_error !== UPLOAD_ERR_OK) {
-        continue; // O maneja el error específico
+        continue;
     }
 
-    // Generar un nombre único para el archivo
-    $file_extension = pathinfo($name, PATHINFO_EXTENSION);
-    $new_file_name = uniqid() . '.' . $file_extension;
+    if (($uploaded_files['size'][$key] ?? 0) > 12 * 1024 * 1024) {
+        continue;
+    }
+
+    $file_type = (new finfo(FILEINFO_MIME_TYPE))->file($file_tmp);
+    if (!in_array($file_type, ['image/jpeg', 'image/png', 'image/webp'], true) || @getimagesize($file_tmp) === false) {
+        continue;
+    }
+
+    // Se fuerza una extensión segura y consistente con la compresión final.
+    $new_file_name = bin2hex(random_bytes(12)) . '.jpg';
     $target_file = $target_dir . $new_file_name;
 
-    // Comprimir y guardar la imagen (usando la librería GD)
     $image = null;
-    if ($file_type == 'image/jpeg' || $file_type == 'image/jpg') {
-        $image = imagecreatefromjpeg($file_tmp);
-    } elseif ($file_type == 'image/png') {
-        $image = imagecreatefrompng($file_tmp);
+    if ($file_type === 'image/jpeg') {
+        $image = @imagecreatefromjpeg($file_tmp);
+    } elseif ($file_type === 'image/png') {
+        $image = @imagecreatefrompng($file_tmp);
+    } elseif ($file_type === 'image/webp' && function_exists('imagecreatefromwebp')) {
+        $image = @imagecreatefromwebp($file_tmp);
     }
 
-    if ($image) {
-        // Redimensionar o comprimir (ejemplo simple de compresión)
-        imagejpeg($image, $target_file, 75); // 75 es el nivel de calidad
-        imagedestroy($image);
-    } else {
-        // Si no se puede comprimir, simplemente se mueve
-        move_uploaded_file($file_tmp, $target_file);
+    if (!$image || !imagejpeg($image, $target_file, 82)) {
+        if ($image) imagedestroy($image);
+        continue;
     }
+    imagedestroy($image);
 
     // Insertar datos en la base de datos
     $sql = "INSERT INTO fotos_boda (nombre_subida, nombre_archivo, fecha_subida) VALUES (?, ?, ?)";
@@ -81,6 +80,8 @@ foreach ($uploaded_files['name'] as $key => $name) {
     
     if ($stmt->execute()) {
         $success_count++;
+    } else {
+        @unlink($target_file);
     }
     $stmt->close();
 }

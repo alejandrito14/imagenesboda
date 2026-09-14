@@ -1,13 +1,8 @@
 <?php
 header('Content-Type: application/json');
 
-// Configuración de la base de datos
-$servername = "localhost";
-$username = "root"; // Cambia esto
-$password = "root"; // Cambia esto
-$dbname = "baseboda"; // Cambia esto
-
-$conn = new mysqli($servername, $username, $password, $dbname);
+require_once __DIR__ . '/includes/database.php';
+$conn = boda_db();
 
 if ($conn->connect_error) {
     echo json_encode(['error' => 'Error de conexión.']);

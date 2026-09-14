@@ -1,0 +1,269 @@
+@charset "UTF-8";
+/* CSS Document */
+
+.btn-primary{
+	background-color: #f6821f ;
+	border: 1px solid #FFFFFF;
+}
+
+.btn-primary:hover{
+	background-color: #f6821f ;
+	border: 1px solid #FFFFFF;
+}
+
+
+.page-item.active .page-link {
+	background-color: #044186 ;
+	border: 1px solid #FFFFFF;
+}
+
+.paginate_button .page-item .active {
+	background-color: #044186 ;
+	border: 1px solid #FFFFFF;
+}
+
+..page-link {
+	color: #044186;
+}
+
+.btn_colorgray{
+     background-color:gray;
+    border: 1px solid #FFFFFF;
+
+    color:#ffffff;
+
+}
+.btn_azul{
+   background-color:#021836;
+    border: 1px solid #FFFFFF;
+    color:#ffffff;
+}
+
+/*.btn_verde{
+   background-color:#469924;
+    border: 1px solid #FFFFFF;
+    color:#ffffff;
+}*/
+
+.btn_rojo{
+   background-color:red;
+    border: 1px solid #FFFFFF;
+    color:#ffffff;
+}
+
+.btn_accion{
+	 background-color:#a7a25a;
+    border: 1px solid #FFFFFF;
+    color:#ffffff;
+}
+.container-fluid{
+    font-size: 12px!important;
+}
+h5,h4{
+    font-size: 12px!important;
+}
+
+.btn{
+    font-size: 12px!important;
+}
+
+.chosen-container{
+    font-size: 10px!important;
+}
+
+    input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+    }
+input[type=number] { -moz-appearance:textfield; }
+
+/* Tema neutro para el panel de la invitación. */
+#main-wrapper .left-sidebar[data-sidebarbg=skin5],
+#main-wrapper .left-sidebar[data-sidebarbg=skin5] ul {
+    background: #303234;
+}
+
+#sidebarnav > .sidebar-item > ul.first-level {
+    display: none !important;
+    background: #3a3c3e;
+}
+
+#sidebarnav > .sidebar-item > ul.first-level.in {
+    display: block !important;
+}
+
+#main-wrapper .sidebar-nav ul .sidebar-item.selected > .sidebar-link {
+    background: #85817a;
+    color: #ffffff;
+}
+
+#main-wrapper .sidebar-nav ul .sidebar-item .sidebar-link:hover,
+#main-wrapper .sidebar-nav ul .sidebar-item .sidebar-link.active {
+    background-color: rgba(255, 255, 255, 0.07);
+}
+
+#main-wrapper .sidebar-nav ul .sidebar-item.selected > .sidebar-link.active {
+    background: #85817a;
+}
+
+#main-wrapper .sidebar-nav ul .sidebar-item .sidebar-link,
+#main-wrapper .sidebar-nav ul .sidebar-item .sidebar-link i {
+    color: #f1efeb;
+}
+
+.page-wrapper {
+    background: #f2f1ef;
+}
+
+.btn_azul,
+.page-item.active .page-link,
+.paginate_button .page-item .active {
+    background-color: #77746f;
+    border-color: #77746f;
+}
+
+input:checked + .slider {
+    background-color: #85817a;
+}
+
+input:focus + .slider {
+    box-shadow: 0 0 1px #85817a;
+}
+
+/* Rediseño editorial del dashboard de invitaciones. */
+:root {
+    --wedding-ink: #1d2923;
+    --wedding-green: #55765c;
+    --wedding-green-dark: #3f6048;
+    --wedding-sage: #e8ede5;
+    --wedding-cream: #f7f5f0;
+    --wedding-paper: #fffefa;
+    --wedding-gold: #b39561;
+    --wedding-line: #e3e0d8;
+    --wedding-muted: #6e746f;
+}
+
+body,
+#main-wrapper {
+    background: var(--wedding-cream);
+    color: var(--wedding-ink);
+    font-family: "Montserrat", sans-serif;
+}
+
+#main-wrapper .topbar,
+#main-wrapper .topbar .navbar,
+#main-wrapper .topbar .navbar-collapse,
+#main-wrapper .topbar .navbar-header {
+    min-height: 70px;
+    background: rgba(255, 254, 250, .97) !important;
+    border-bottom: 1px solid var(--wedding-line);
+    box-shadow: none;
+}
+
+#main-wrapper .topbar .navbar-header {
+    border-right: 1px solid var(--wedding-line);
+}
+
+.wedding-brand {
+    height: 70px !important;
+    display: flex !important;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 22px !important;
+    background: transparent !important;
+    color: var(--wedding-ink) !important;
+}
+
+.wedding-brand .logo-icon { display: none; }
+.wedding-brand .brand-heart { color: var(--wedding-gold); font-size: 32px; line-height: 1; }
+.wedding-brand .logo-text { display: flex !important; flex-direction: column; align-items: flex-start; line-height: 1; }
+.wedding-brand .logo-text strong { color: var(--wedding-ink); font-family: "Cormorant Garamond", serif; font-size: 16px; letter-spacing: .15em; font-weight: 600; }
+.wedding-brand .logo-text em { color: #735f45; font-family: "Cormorant Garamond", serif; font-size: 19px; font-weight: 500; }
+
+#main-wrapper .topbar .nombreetiqueta,
+#main-wrapper .topbar form p {
+    color: var(--wedding-ink) !important;
+}
+
+#main-wrapper .left-sidebar[data-sidebarbg=skin5],
+#main-wrapper .left-sidebar[data-sidebarbg=skin5] ul,
+#main-wrapper .scroll-sidebar {
+    background: #fbfaf6 !important;
+}
+
+#main-wrapper .left-sidebar {
+    border-right: 1px solid var(--wedding-line);
+    box-shadow: none;
+    padding-top: 70px;
+}
+
+#sidebarnav { padding: 24px 14px !important; }
+#sidebarnav > br { display: none; }
+#main-wrapper .sidebar-nav ul .sidebar-item { margin: 4px 0; }
+#main-wrapper .sidebar-nav ul .sidebar-item .sidebar-link {
+    min-height: 44px;
+    padding: 11px 14px;
+    border-radius: 8px;
+    color: #303833 !important;
+    transition: background-color .2s ease, color .2s ease;
+}
+#main-wrapper .sidebar-nav ul .sidebar-item .sidebar-link i {
+    color: #4e5b52 !important;
+    font-size: 20px;
+}
+#main-wrapper .sidebar-nav ul .sidebar-item .sidebar-link .hide-menu {
+    font-size: 12px !important;
+    font-weight: 500;
+    letter-spacing: .01em;
+}
+#main-wrapper .sidebar-nav ul .sidebar-item .sidebar-link:hover,
+#main-wrapper .sidebar-nav ul .sidebar-item .sidebar-link.active,
+#main-wrapper .sidebar-nav ul .sidebar-item.selected > .sidebar-link,
+#main-wrapper .sidebar-nav ul .sidebar-item.selected > .sidebar-link.active {
+    background: var(--wedding-sage) !important;
+    color: var(--wedding-green-dark) !important;
+}
+#main-wrapper .sidebar-nav ul .sidebar-item.selected > .sidebar-link i { color: var(--wedding-green-dark) !important; }
+#sidebarnav > .sidebar-item > ul.first-level { background: transparent !important; padding: 4px 0 4px 14px; }
+
+.page-wrapper { background: var(--wedding-cream) !important; }
+.page-breadcrumb { padding: 16px 30px 0; background: transparent; }
+.page-breadcrumb .breadcrumb { background: transparent; color: var(--wedding-muted); }
+.container-fluid { padding: 18px 30px 38px; font-size: 12px !important; }
+
+.card {
+    border: 1px solid var(--wedding-line);
+    border-radius: 11px;
+    background: var(--wedding-paper);
+    box-shadow: 0 8px 30px rgba(39, 50, 43, .045);
+}
+
+h1, h2, h3, .card-title { font-family: "Cormorant Garamond", serif; color: var(--wedding-ink); }
+h5, h4 { font-size: initial !important; }
+
+.btn { border-radius: 7px; font-weight: 500; }
+.btn-primary,
+.btn-primary:hover,
+.btn-primary:focus {
+    background: var(--wedding-green) !important;
+    border-color: var(--wedding-green) !important;
+    color: #fff;
+    box-shadow: none;
+}
+.btn-outline-primary { color: var(--wedding-green); border-color: #9cad9d; }
+.btn-outline-primary:hover { background: var(--wedding-green); border-color: var(--wedding-green); }
+.form-control {
+    min-height: 39px;
+    border-color: #dcd9d0;
+    border-radius: 7px;
+    background: #fff;
+}
+.form-control:focus { border-color: #879d8b; box-shadow: 0 0 0 3px rgba(85, 118, 92, .1); }
+
+@media (max-width: 767.98px) {
+    #main-wrapper .left-sidebar { padding-top: 0; }
+    .page-breadcrumb { padding: 12px 16px 0; }
+    .container-fluid { padding: 14px 16px 30px; }
+    .wedding-brand { padding-left: 12px !important; }
+}
