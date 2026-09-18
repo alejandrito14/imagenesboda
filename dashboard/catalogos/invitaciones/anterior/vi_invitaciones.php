@@ -34,7 +34,7 @@ foreach ($guests as $guestItem) {
 <div class="inv-page-heading"><h2>¡Hola, <?= $e($_SESSION['se_Empleado'] ?? 'bienvenido') ?>!</h2><p>Aquí tienes un resumen de tu invitación y la asistencia de tus invitados.</p></div>
 <section class="inv-overview-hero">
     <div class="inv-overview-image"><img id="invOverviewImage" src="../<?= $e($settings['hero_image']) ?>" alt="Fotografía de <?= $e($settings['couple_name']) ?>"></div>
-    <div class="inv-overview-copy"><p id="invOverviewEventLabel" class="eyebrow"><?= $e($settings['event_label']) ?></p><h2 id="invOverviewName"><?= $e($settings['couple_name']) ?></h2><p id="invOverviewDate" class="date"><?= $e(invitation_date_label($settings['event_date'])) ?></p><a id="invOverviewPreviewButton" class="btn btn-primary px-4" href="<?= $e($previewBaseUrl) ?>/" target="_blank" rel="noopener">Ver invitación <i class="mdi mdi-open-in-new ml-1"></i></a></div>
+    <div class="inv-overview-copy"><p id="invOverviewEventLabel" class="eyebrow"><?= $e($settings['event_label']) ?></p><h2 id="invOverviewName"><?= $e($settings['couple_name']) ?></h2><p id="invOverviewDate" class="date"><?= $e(invitation_date_label($settings['event_date'])) ?></p><a class="btn btn-primary px-4" href="<?= $e($previewBaseUrl) ?>/" target="_blank" rel="noopener">Ver invitación <i class="mdi mdi-open-in-new ml-1"></i></a></div>
 </section>
 <div class="inv-stat-grid">
     <div class="inv-stat"><span class="inv-stat-icon"><i class="mdi mdi-account-multiple-outline"></i></span><div><span>Total invitados</span><strong><?= $guestTotals['all'] ?></strong></div></div>
@@ -45,7 +45,7 @@ foreach ($guests as $guestItem) {
 <div class="card inv-admin">
     <div class="card-header">
         <div><h5 class="card-title mb-1">INVITACIÓN DIGITAL</h5><p class="section-note mb-0">Todos los cambios se reflejan en la invitación pública.</p></div>
-        <a id="invHeaderPreviewButton" class="btn btn-outline-dark" href="<?= $e($previewBaseUrl) ?>/" target="_blank" rel="noopener">Vista previa</a>
+        <a class="btn btn-outline-dark" href="<?= $e($previewBaseUrl) ?>/" target="_blank" rel="noopener">Vista previa</a>
     </div>
     <div class="card-body">
         <form id="invitationAdminForm" enctype="multipart/form-data">
@@ -149,7 +149,7 @@ foreach ($guests as $guestItem) {
                                     <div class="col-md-1 form-group"><label>Personas</label><input class="form-control" type="number" min="1" name="guest_count[]" value="<?= (int)$guest['guest_count'] ?>"></div>
                                     <div class="col-md-2 form-group"><label>Estado</label><div><span class="status-pill status-<?= $e($guest['attendance']) ?>"><?= $e($attendanceLabels[$guest['attendance']] ?? 'Pendiente') ?></span></div></div>
                                     <div class="col-md-7 form-group"><label>Información del pase</label><input class="form-control" name="guest_pass[]" value="<?= $e($guest['pass_information']) ?>"></div>
-                                    <div class="col-md-5 form-group"><label>Acciones</label><div class="guest-actions"><a class="btn btn-sm btn-whatsapp whatsapp-guest" href="<?= $e(generateWhatsAppUrl($settings, $guest)) ?>" target="_blank" rel="noopener">WhatsApp</a><button class="btn btn-sm btn-outline-secondary edit-guest" type="button">Editar</button><a class="btn btn-sm btn-outline-dark guest-preview" href="<?= $e(invitation_guest_url($guest['invitation_code'], $settings, $previewBaseUrl)) ?>" target="_blank" rel="noopener">Ver pase</a></div></div>
+                                    <div class="col-md-5 form-group"><label>Acciones</label><div class="guest-actions"><a class="btn btn-sm btn-whatsapp whatsapp-guest" href="<?= $e(generateWhatsAppUrl($settings, $guest)) ?>" target="_blank" rel="noopener">WhatsApp</a><button class="btn btn-sm btn-outline-secondary edit-guest" type="button">Editar</button><a class="btn btn-sm btn-outline-dark guest-preview" href="<?= $e($previewBaseUrl . '/i/' . rawurlencode($guest['invitation_code'])) ?>" target="_blank" rel="noopener">Ver pase</a></div></div>
                                 </div>
                             </div>
                         <?php endforeach; ?>
@@ -196,31 +196,6 @@ document.getElementById('invitationAdminForm').addEventListener('submit', async 
                 overviewImage.src = '../' + String(data.invitation.hero_image).replace(/^\.\.\//, '');
                 overviewImage.alt = 'Fotografía de ' + data.invitation.couple_name;
             }
-            const publicBaseUrl = String(data.invitation.public_url || data.invitation.preview_url || '').replace(/\/$/, '');
-            const previewBaseUrl = String(data.invitation.preview_url || data.invitation.public_url || '').replace(/\/$/, '');
-            if (window.invitationWhatsAppData && publicBaseUrl) window.invitationWhatsAppData.baseUrl = publicBaseUrl;
-            if (previewBaseUrl) {
-                ['invOverviewPreviewButton', 'invHeaderPreviewButton'].forEach((id) => {
-                    const previewButton = document.getElementById(id);
-                    if (previewButton) previewButton.href = previewBaseUrl + '/';
-                });
-                document.querySelectorAll('.guest-preview').forEach((previewButton) => {
-                    const row = previewButton.closest('.guest-row');
-                    const code = row?.querySelector('[name="guest_code[]"]')?.value.trim();
-                    if (code) previewButton.href = previewBaseUrl + '/index.php?code=' + encodeURIComponent(code.toUpperCase());
-                });
-            }
-            if (window.invitationWhatsAppData && publicBaseUrl) {
-                document.querySelectorAll('.whatsapp-guest').forEach((whatsappButton) => {
-                    const row = whatsappButton.closest('.guest-row');
-                    const guest = {
-                        name: row?.querySelector('[name="guest_name[]"]')?.value.trim() || '',
-                        phone: row?.querySelector('[name="guest_phone[]"]')?.value.trim() || '',
-                        code: row?.querySelector('[name="guest_code[]"]')?.value.trim() || ''
-                    };
-                    if (guest.code) whatsappButton.href = generateWhatsAppUrl(window.invitationWhatsAppData, guest);
-                });
-            }
         }
     } catch (error) {
         status.className = 'text-danger';
@@ -243,7 +218,7 @@ window.invitationWhatsAppData = <?= json_encode([
 window.generateWhatsAppUrl = function(invitation, guest) {
     var phone = String(guest.phone || '').replace(/\D/g, '');
     var code = String(guest.code || '').trim().toUpperCase();
-    var guestUrl = invitation.baseUrl.replace(/\/$/, '') + '/index.php?code=' + encodeURIComponent(code);
+    var guestUrl = invitation.baseUrl.replace(/\/$/, '') + '/i/' + encodeURIComponent(code);
     var message = [
         'Hola ' + (guest.name || 'invitado') + ' 👋',
         '',

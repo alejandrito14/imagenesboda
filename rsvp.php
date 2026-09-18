@@ -1,6 +1,6 @@
 <?php
 header('Content-Type: application/json; charset=utf-8');
-require_once __DIR__ . '/includes/database.php';
+require_once __DIR__ . '/includes/invitation.php';
 
 function rsvp_response(int $status, array $payload): never
 {
@@ -21,14 +21,14 @@ if ($code === '' || $lastName === '') rsvp_response(422, ['success' => false, 'm
 
 try {
     $db = boda_db();
-    $statement = $db->prepare('SELECT id, guest_name, guest_count, pass_information, attendance FROM invitation_guests WHERE UPPER(invitation_code) = ? AND LOWER(last_name) = LOWER(?) LIMIT 1');
+    $statement = $db->prepare('SELECT id, guest_name, last_name, guest_count, pass_information, attendance FROM invitation_guests WHERE UPPER(invitation_code) = ? AND LOWER(last_name) = LOWER(?) LIMIT 1');
     $statement->bind_param('ss', $code, $lastName);
     $statement->execute();
     $guest = $statement->get_result()->fetch_assoc();
     if (!$guest) rsvp_response(404, ['success' => false, 'message' => 'No encontramos una invitación con esos datos. Revisa que estén escritos como en tu pase.']);
 
     if ($action === 'lookup') {
-        rsvp_response(200, ['success' => true, 'guest' => ['guest_name' => $guest['guest_name'], 'guest_count' => (int) $guest['guest_count'], 'pass_information' => $guest['pass_information'], 'attendance' => $guest['attendance']]]);
+        rsvp_response(200, ['success' => true, 'guest' => ['guest_name' => invitation_guest_display_name($guest), 'guest_count' => (int) $guest['guest_count'], 'pass_information' => $guest['pass_information'], 'attendance' => $guest['attendance']]]);
     }
     if ($action === 'respond') {
         $attendance = $input['attendance'] ?? '';

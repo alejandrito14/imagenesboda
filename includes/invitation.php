@@ -73,6 +73,17 @@ function invitation_guest_by_code(string $code): ?array
     }
 }
 
+function invitation_guest_display_name(array $guest): string
+{
+    $name = trim((string) ($guest['guest_name'] ?? ''));
+    $lastName = trim((string) ($guest['last_name'] ?? ''));
+    if ($lastName === '') return $name;
+    if ($name === '') return $lastName;
+
+    $nameEnd = mb_strtolower(mb_substr($name, -mb_strlen($lastName)));
+    return $nameEnd === mb_strtolower($lastName) ? $name : $name . ' ' . $lastName;
+}
+
 function invitation_request_base_url(): string
 {
     $forwardedProto = trim(explode(',', (string) ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? ''))[0]);
@@ -104,9 +115,11 @@ function invitation_preview_base_url(?array $invitation = null): string
     return $configured !== '' ? rtrim($configured, '/') : invitation_public_base_url($invitation);
 }
 
-function invitation_guest_url(string $code, ?array $invitation = null): string
+function invitation_guest_url(string $code, ?array $invitation = null, ?string $baseUrl = null): string
 {
-    return invitation_public_base_url($invitation) . '/i/' . rawurlencode(mb_strtoupper(trim($code)));
+    $baseUrl = rtrim($baseUrl ?: invitation_public_base_url($invitation), '/');
+    // No depende de mod_rewrite ni de archivos .htaccess en el hosting.
+    return $baseUrl . '/index.php?code=' . rawurlencode(mb_strtoupper(trim($code)));
 }
 
 function invitation_date_label(string $date): string

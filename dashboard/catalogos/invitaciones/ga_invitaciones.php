@@ -113,6 +113,8 @@ try {
             'event_label' => $eventLabel,
             'event_date_label' => invitation_date_label($date),
             'hero_image' => $heroImage,
+            'public_url' => $publicUrl,
+            'preview_url' => $previewUrl,
         ],
     ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 } catch (Throwable $exception) {

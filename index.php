@@ -7,7 +7,9 @@ if ($requestedCode === '' && preg_match('~/i/([^/?#]+)~', (string) ($_SERVER['RE
     $requestedCode = mb_strtoupper(rawurldecode($routeMatch[1]));
 }
 $personalGuest = $requestedCode !== '' ? invitation_guest_by_code($requestedCode) : null;
+$personalGuestName = $personalGuest ? invitation_guest_display_name($personalGuest) : '';
 $assetBaseUrl = invitation_request_base_url();
+$currentInvitationPath = strtok((string) ($_SERVER['REQUEST_URI'] ?? '/'), '#') ?: '/';
 if ($requestedCode !== '' && !$personalGuest) http_response_code(404);
 $storyItems = invitation_story_load();
 $giftItems = invitation_gifts_load();
@@ -20,19 +22,6 @@ $timeLabels = match ($invitation['event_type'] ?? 'wedding') {
     default => ['Ceremonia', 'Recepción'],
 };
 
-if (count($galleryPhotos) < 4) {
-    $fallbackGallery = [
-        ['src' => 'imagenes/boda1.jpg', 'nombre_subida' => $invitation['story_label']],
-        ['src' => 'imagenes/boda3.jpg', 'nombre_subida' => 'Los detalles'],
-        ['src' => 'imagenes/boda4.jpg', 'nombre_subida' => 'Nuestro día'],
-        ['src' => 'imagenes/boda2.jpg', 'nombre_subida' => 'Juntos'],
-    ];
-    foreach ($fallbackGallery as $fallback) {
-        if (!in_array($fallback['src'], array_column($galleryPhotos, 'src'), true)) {
-            $galleryPhotos[] = $fallback;
-        }
-    }
-}
 ?>
 <!doctype html>
 <html lang="es">
@@ -46,7 +35,7 @@ if (count($galleryPhotos) < 4) {
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=2">
+    <link rel="stylesheet" href="style.css?v=4">
 </head>
 <body>
     <a class="skip-link" href="#historia">Saltar al contenido</a>
@@ -121,7 +110,7 @@ if (count($galleryPhotos) < 4) {
         <?php endif; ?>
 
         <section id="asistencia" class="attendance-section">
-            <div class="attendance-intro reveal"><p class="eyebrow">Confirma tu asistencia</p><h2><?= $personalGuest ? '¡Hola, ' . invitation_escape($personalGuest['guest_name']) . '!' : '¿Nos acompañas?' ?></h2><p><?= $personalGuest ? 'Esta invitación está preparada especialmente para ti.' : 'Nos haría muy felices celebrar este día contigo.' ?></p></div>
+            <div class="attendance-intro reveal"><p class="eyebrow">Confirma tu asistencia</p><h2><?= $personalGuest ? '¡Hola, ' . invitation_escape($personalGuestName) . '!' : '¿Nos acompañas?' ?></h2><p><?= $personalGuest ? 'Esta invitación está preparada especialmente para ti.' : 'Nos haría muy felices celebrar este día contigo.' ?></p></div>
             <div class="attendance-panel reveal">
                 <?php if ($requestedCode !== '' && !$personalGuest): ?>
                     <div class="form-status error">Este código de invitación no existe o ya no está disponible.</div>
@@ -135,7 +124,7 @@ if (count($galleryPhotos) < 4) {
                 <?php endif; ?>
                 <div id="rsvpStatus" class="form-status" role="status" aria-live="polite"></div>
                 <div id="guestPass" class="guest-pass" <?= $personalGuest ? '' : 'hidden' ?>>
-                    <p class="guest-pass-label">Invitación para</p><h3 id="guestName"><?= $personalGuest ? invitation_escape($personalGuest['guest_name']) : '' ?></h3><p><strong id="guestCount"><?= $personalGuest ? (int) $personalGuest['guest_count'] . ((int) $personalGuest['guest_count'] === 1 ? ' persona' : ' personas') : '' ?></strong></p><p id="passInformation"><?= $personalGuest ? invitation_escape($personalGuest['pass_information']) : '' ?></p>
+                    <p class="guest-pass-label">Invitación para</p><h3 id="guestName"><?= $personalGuest ? invitation_escape($personalGuestName) : '' ?></h3><p><strong id="guestCount"><?= $personalGuest ? (int) $personalGuest['guest_count'] . ((int) $personalGuest['guest_count'] === 1 ? ' persona' : ' personas') : '' ?></strong></p><p id="passInformation"><?= $personalGuest ? invitation_escape($personalGuest['pass_information']) : '' ?></p>
                     <div class="attendance-actions"><button class="button button-gold" type="button" data-attendance="yes">Sí, asistiré</button><button class="button button-outline" type="button" data-attendance="no">No podré asistir</button></div>
                 </div>
             </div>
@@ -160,9 +149,12 @@ if (count($galleryPhotos) < 4) {
     </main>
 
     <footer class="site-footer"><p class="footer-names"><?= invitation_escape($invitation['couple_name']) ?></p><p>Gracias por formar parte de nuestra historia.</p><span><?= $dateParts['day'] ?> · <?= $dateParts['month'] ?> · <?= $dateParts['year'] ?></span></footer>
+    <?php if ($personalGuest): ?>
+        <a class="personal-pass-button" href="<?= invitation_escape($currentInvitationPath) ?>#asistencia"><span aria-hidden="true">🎟</span>Ver mi pase</a>
+    <?php endif; ?>
     <nav class="mobile-nav" aria-label="Navegación móvil"><a href="#inicio"><span aria-hidden="true">⌂</span>Inicio</a><a href="#historia"><span aria-hidden="true">♡</span><?= invitation_escape($invitation['story_label']) ?></a><a href="#detalles"><span aria-hidden="true">◇</span>Detalles</a><a href="#asistencia"><span aria-hidden="true">✓</span>Asistencia</a></nav>
     <dialog id="lightbox" class="lightbox"><button type="button" class="lightbox-close" aria-label="Cerrar fotografía">×</button><img src="" alt="Fotografía ampliada"></dialog>
-    <?php if ($personalGuest): ?><script id="personalGuestData" type="application/json"><?= json_encode(['invitation_code' => $personalGuest['invitation_code'], 'last_name' => $personalGuest['last_name'], 'guest_name' => $personalGuest['guest_name'], 'guest_count' => (int) $personalGuest['guest_count'], 'pass_information' => $personalGuest['pass_information'], 'attendance' => $personalGuest['attendance']], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP) ?></script><?php endif; ?>
-    <script src="script.js?v=3" defer></script>
+    <?php if ($personalGuest): ?><script id="personalGuestData" type="application/json"><?= json_encode(['invitation_code' => $personalGuest['invitation_code'], 'last_name' => $personalGuest['last_name'], 'guest_name' => $personalGuestName, 'guest_count' => (int) $personalGuest['guest_count'], 'pass_information' => $personalGuest['pass_information'], 'attendance' => $personalGuest['attendance']], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP) ?></script><?php endif; ?>
+    <script src="script.js?v=9" defer></script>
 </body>
 </html>

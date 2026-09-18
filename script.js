@@ -30,11 +30,36 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const lightbox = document.getElementById('lightbox');
-    document.querySelectorAll('[data-lightbox]').forEach((button) => button.addEventListener('click', () => {
+    const bindLightbox = (button) => button.addEventListener('click', () => {
+        if (!lightbox) return;
         lightbox.querySelector('img').src = button.dataset.lightbox;
         lightbox.showModal();
         document.body.classList.add('dialog-open');
-    }));
+    });
+    document.querySelectorAll('[data-lightbox]').forEach(bindLightbox);
+    const createGalleryItem = (photo, index) => {
+        const galleryButton = document.createElement('button');
+        galleryButton.className = 'gallery-item reveal is-visible';
+        galleryButton.type = 'button';
+        galleryButton.dataset.lightbox = photo.src;
+        galleryButton.setAttribute('aria-label', `Ampliar fotografía ${index + 1}`);
+        const image = document.createElement('img');
+        image.src = photo.src;
+        image.alt = `Fotografía de ${photo.nombre_subida || photo.uploader || 'la celebración'}`;
+        image.loading = 'lazy';
+        galleryButton.appendChild(image);
+        bindLightbox(galleryButton);
+        return galleryButton;
+    };
+    const refreshGallery = async () => {
+        const currentGallery = document.querySelector('.editorial-gallery');
+        if (!currentGallery) return;
+        const response = await fetch(`gallery.php?updated=${Date.now()}`, { cache: 'no-store' });
+        if (!response.ok) throw new Error('No pudimos actualizar la galería.');
+        const data = await response.json();
+        if (!data.success || !Array.isArray(data.photos)) throw new Error('No pudimos actualizar la galería.');
+        currentGallery.replaceChildren(...data.photos.map(createGalleryItem));
+    };
     lightbox?.querySelector('.lightbox-close')?.addEventListener('click', () => lightbox.close());
     lightbox?.addEventListener('click', (event) => { if (event.target === lightbox) lightbox.close(); });
     lightbox?.addEventListener('close', () => document.body.classList.remove('dialog-open'));
@@ -93,19 +118,42 @@ document.addEventListener('DOMContentLoaded', () => {
     const fileList = document.getElementById('fileList');
     const uploadStatus = document.getElementById('uploadStatus');
     const submitButton = document.getElementById('submitBtn');
-    fileInput?.addEventListener('change', () => {
-        fileList.innerHTML = '';
-        [...fileInput.files].slice(0, 10).forEach((file) => {
+    let selectedFiles = [];
+    const renderSelectedFiles = () => {
+        fileList.replaceChildren();
+        selectedFiles.forEach((item, index) => {
+            const preview = document.createElement('div');
+            preview.className = 'file-preview-item';
             const image = document.createElement('img');
-            image.src = URL.createObjectURL(file);
-            image.alt = '';
-            image.onload = () => URL.revokeObjectURL(image.src);
-            fileList.appendChild(image);
+            image.src = item.url;
+            image.alt = `Vista previa de ${item.file.name}`;
+            const remove = document.createElement('button');
+            remove.type = 'button';
+            remove.className = 'file-preview-remove';
+            remove.setAttribute('aria-label', `Quitar ${item.file.name}`);
+            remove.textContent = '×';
+            remove.addEventListener('click', () => {
+                URL.revokeObjectURL(item.url);
+                selectedFiles.splice(index, 1);
+                renderSelectedFiles();
+            });
+            preview.append(image, remove);
+            fileList.appendChild(preview);
         });
+    };
+    fileInput?.addEventListener('change', () => {
+        selectedFiles.forEach((item) => URL.revokeObjectURL(item.url));
+        selectedFiles = [...fileInput.files].map((file) => ({ file, url: URL.createObjectURL(file) }));
+        renderSelectedFiles();
     });
     uploadForm?.addEventListener('submit', async (event) => {
         event.preventDefault();
-        if (fileInput.files.length > 10) {
+        if (!selectedFiles.length) {
+            uploadStatus.className = 'form-status error';
+            uploadStatus.textContent = 'Selecciona al menos una imagen.';
+            return;
+        }
+        if (selectedFiles.length > 10) {
             uploadStatus.className = 'form-status error';
             uploadStatus.textContent = 'Selecciona un máximo de 10 imágenes.';
             return;
@@ -113,13 +161,33 @@ document.addEventListener('DOMContentLoaded', () => {
         submitButton.disabled = true;
         submitButton.textContent = 'Compartiendo…';
         try {
-            const response = await fetch('upload.php', { method: 'POST', body: new FormData(uploadForm) });
-            const message = await response.text();
-            if (!response.ok) throw new Error(message || 'No se pudieron subir las imágenes.');
+            const uploadData = new FormData(uploadForm);
+            uploadData.delete('photos[]');
+            selectedFiles.forEach((item) => uploadData.append('photos[]', item.file, item.file.name));
+            const response = await fetch('upload.php', { method: 'POST', body: uploadData });
+            const rawResponse = await response.text();
+            let data;
+            try {
+                data = JSON.parse(rawResponse);
+            } catch (parseError) {
+                const message = rawResponse.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+                // Compatibilidad con el upload.php anterior, que responde texto plano al guardar.
+                if (response.ok && /^Se han subido\s+\d+\s+imágenes exitosamente\.$/i.test(message)) {
+                    data = { success: true, message };
+                } else {
+                    throw new Error(message || 'El servidor devolvió una respuesta no válida.');
+                }
+            }
+            if (!response.ok || !data.success) throw new Error(data.message || 'No se pudieron subir las imágenes.');
+
             uploadStatus.className = 'form-status success';
-            uploadStatus.textContent = message;
+            uploadStatus.textContent = data.message;
             uploadForm.reset();
-            fileList.innerHTML = '';
+            fileInput.value = '';
+            selectedFiles.forEach((item) => URL.revokeObjectURL(item.url));
+            selectedFiles = [];
+            fileList.replaceChildren();
+            try { await refreshGallery(); } catch (refreshError) { console.warn(refreshError); }
         } catch (error) {
             uploadStatus.className = 'form-status error';
             uploadStatus.textContent = error.message;
