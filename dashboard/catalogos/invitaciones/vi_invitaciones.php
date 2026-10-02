@@ -171,6 +171,7 @@ document.getElementById('invitationAdminForm').addEventListener('submit', async 
     const status = document.getElementById('invitationSaveStatus');
     button.disabled = true;
     status.textContent = 'Guardando…';
+    const submittedGuestIds = Array.from(this.querySelectorAll('[name="guest_id[]"]'));
     try {
         const response = await fetch('catalogos/invitaciones/ga_invitaciones.php', { method: 'POST', body: new FormData(this) });
         const rawResponse = await response.text();
@@ -182,6 +183,10 @@ document.getElementById('invitationAdminForm').addEventListener('submit', async 
             throw new Error(readableMessage || 'El servidor devolvió una respuesta no válida.');
         }
         if (!response.ok || !data.success) throw new Error(data.message || 'No se pudo guardar');
+        (data.guests || []).forEach((guest) => {
+            const idInput = submittedGuestIds[guest.index];
+            if (idInput) idInput.value = String(guest.id);
+        });
         status.className = 'text-success';
         status.textContent = data.message;
         if (data.invitation) {
@@ -207,7 +212,10 @@ document.getElementById('invitationAdminForm').addEventListener('submit', async 
                 document.querySelectorAll('.guest-preview').forEach((previewButton) => {
                     const row = previewButton.closest('.guest-row');
                     const code = row?.querySelector('[name="guest_code[]"]')?.value.trim();
-                    if (code) previewButton.href = previewBaseUrl + '/index.php?code=' + encodeURIComponent(code.toUpperCase());
+                    if (code) {
+                        previewButton.href = previewBaseUrl + '/index.php?code=' + encodeURIComponent(code.toUpperCase());
+                        previewButton.hidden = false;
+                    }
                 });
             }
             if (window.invitationWhatsAppData && publicBaseUrl) {
@@ -215,6 +223,7 @@ document.getElementById('invitationAdminForm').addEventListener('submit', async 
                     const row = whatsappButton.closest('.guest-row');
                     const guest = {
                         name: row?.querySelector('[name="guest_name[]"]')?.value.trim() || '',
+                        lastName: row?.querySelector('[name="guest_last_name[]"]')?.value.trim() || '',
                         phone: row?.querySelector('[name="guest_phone[]"]')?.value.trim() || '',
                         code: row?.querySelector('[name="guest_code[]"]')?.value.trim() || ''
                     };
@@ -241,11 +250,16 @@ window.invitationWhatsAppData = <?= json_encode([
 ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP) ?>;
 
 window.generateWhatsAppUrl = function(invitation, guest) {
+    var name = String(guest.name || '').trim();
+    var lastName = String(guest.lastName || '').trim();
+    if (lastName && !name.toLowerCase().endsWith(lastName.toLowerCase())) {
+        name = [name, lastName].filter(Boolean).join(' ');
+    }
     var phone = String(guest.phone || '').replace(/\D/g, '');
     var code = String(guest.code || '').trim().toUpperCase();
     var guestUrl = invitation.baseUrl.replace(/\/$/, '') + '/index.php?code=' + encodeURIComponent(code);
     var message = [
-        'Hola ' + (guest.name || 'invitado') + ' 👋',
+        'Hola ' + (name || 'invitado') + ' 👋',
         '',
         'Tenemos una invitación muy especial para ti. 💍',
         '',
@@ -280,7 +294,7 @@ window.invitationAddGuest = function() {
             <div class="col-md-1 form-group"><label>Personas</label><input class="form-control" type="number" min="1" name="guest_count[]" value="1"></div>
             <div class="col-md-2 form-group"><label>Estado</label><div><span class="status-pill status-pending">Pendiente</span></div></div>
             <div class="col-md-7 form-group"><label>Información del pase</label><input class="form-control" name="guest_pass[]"></div>
-            <div class="col-md-5 form-group"><label>Acciones</label><div class="guest-actions"><a class="btn btn-sm btn-whatsapp whatsapp-guest" href="#" target="_blank" rel="noopener">WhatsApp</a><button class="btn btn-sm btn-outline-secondary edit-guest" type="button">Editar</button></div></div>
+            <div class="col-md-5 form-group"><label>Acciones</label><div class="guest-actions"><a class="btn btn-sm btn-whatsapp whatsapp-guest" href="#" target="_blank" rel="noopener">WhatsApp</a><button class="btn btn-sm btn-outline-secondary edit-guest" type="button">Editar</button><a class="btn btn-sm btn-outline-dark guest-preview" href="#" target="_blank" rel="noopener" hidden>Ver pase</a></div></div>
         </div>
     </div>`;
     document.getElementById('guestRows').insertAdjacentHTML('beforeend', html);
@@ -322,6 +336,7 @@ window.invitationAddGuest = function() {
             var row = whatsapp.closest('.guest-row');
             var guest = {
                 name: row.querySelector('[name="guest_name[]"]').value.trim(),
+                lastName: row.querySelector('[name="guest_last_name[]"]').value.trim(),
                 phone: row.querySelector('[name="guest_phone[]"]').value.trim(),
                 code: row.querySelector('[name="guest_code[]"]').value.trim()
             };

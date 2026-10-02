@@ -140,7 +140,7 @@ function invitation_celebration_message(array $invitation): string
 
 function generateWhatsAppUrl(array $invitation, array $guest): string
 {
-    $name = trim((string) ($guest['guest_name'] ?? '')) ?: 'invitado';
+    $name = invitation_guest_display_name($guest) ?: 'invitado';
     $code = mb_strtoupper(trim((string) ($guest['invitation_code'] ?? '')));
     $phone = preg_replace('/\D+/', '', (string) ($guest['phone'] ?? ''));
     $url = invitation_guest_url($code, $invitation);

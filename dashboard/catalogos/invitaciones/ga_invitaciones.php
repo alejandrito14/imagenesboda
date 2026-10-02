@@ -76,6 +76,7 @@ try {
     }
 
     $keptGuestIds = [];
+    $savedGuests = [];
     foreach (($_POST['guest_code'] ?? []) as $index => $codeValue) {
         $code = mb_strtoupper(trim((string)$codeValue));
         $lastName = trim((string)($_POST['guest_last_name'][$index] ?? ''));
@@ -86,6 +87,17 @@ try {
         $phone = preg_replace('/\D+/', '', (string)($_POST['guest_phone'][$index] ?? ''));
         $phone = $phone !== '' ? $phone : null;
         $id = (int)($_POST['guest_id'][$index] ?? 0);
+        if ($id <= 0) {
+            // Recover rows saved before the browser received their database ID.
+            $guestLookup = $db->prepare('SELECT id FROM invitation_guests WHERE invitation_code=? AND invitation_id=1');
+            $guestLookup->bind_param('s', $code);
+            $guestLookup->execute();
+            $existingGuest = $guestLookup->get_result()->fetch_assoc();
+            if ($existingGuest) $id = (int)$existingGuest['id'];
+        }
+        if ($id > 0 && in_array($id, $keptGuestIds, true)) {
+            throw new RuntimeException('El código ' . $code . ' está repetido en la lista de invitados. Usa un código distinto para cada invitado.');
+        }
         if ($id > 0) {
             $guestUpdate = $db->prepare('UPDATE invitation_guests SET invitation_code=?,last_name=?,guest_name=?,phone=?,guest_count=?,pass_information=? WHERE id=?');
             $guestUpdate->bind_param('ssssisi', $code, $lastName, $guestName, $phone, $count, $pass, $id);
@@ -95,8 +107,10 @@ try {
             $guestInsert = $db->prepare('INSERT INTO invitation_guests (invitation_id,invitation_code,last_name,guest_name,phone,guest_count,pass_information) VALUES (1,?,?,?,?,?,?)');
             $guestInsert->bind_param('ssssis', $code, $lastName, $guestName, $phone, $count, $pass);
             $guestInsert->execute();
-            $keptGuestIds[] = $db->insert_id;
+            $id = (int)$db->insert_id;
+            $keptGuestIds[] = $id;
         }
+        $savedGuests[] = ['index' => (int)$index, 'id' => $id];
     }
     if ($keptGuestIds) {
         $db->query('DELETE FROM invitation_guests WHERE id NOT IN (' . implode(',', array_map('intval', $keptGuestIds)) . ')');
@@ -108,13 +122,14 @@ try {
     echo json_encode([
         'success' => true,
         'message' => 'Invitación guardada y publicada.',
+        'guests' => $savedGuests,
         'invitation' => [
             'couple_name' => $couple,
             'event_label' => $eventLabel,
             'event_date_label' => invitation_date_label($date),
             'hero_image' => $heroImage,
-            'public_url' => $publicUrl,
-            'preview_url' => $previewUrl,
+            'public_url' => invitation_public_base_url(['public_url' => $publicUrl, 'preview_url' => $previewUrl]),
+            'preview_url' => invitation_preview_base_url(['public_url' => $publicUrl, 'preview_url' => $previewUrl]),
         ],
     ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 } catch (Throwable $exception) {
